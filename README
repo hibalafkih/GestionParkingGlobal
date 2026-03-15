@@ -1,0 +1,366 @@
+# 🅿️ SmartParking — Système de Gestion Intelligente de Parking
+
+![Java](https://img.shields.io/badge/Java-17+-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat-square&logo=mysql&logoColor=white)
+![FlatLaf](https://img.shields.io/badge/FlatLaf-3.3-00B4D8?style=flat-square)
+![JDBC](https://img.shields.io/badge/JDBC-9.5-2D6A4F?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Stable-brightgreen?style=flat-square)
+
+> Application desktop Java Swing pour la gestion complète d'un parking intelligent — Administration & Borne client.
+
+---
+
+## 📋 Table des Matières
+
+- [Aperçu](#-aperçu)
+- [Fonctionnalités](#-fonctionnalités)
+- [Architecture](#-architecture)
+- [Structure des projets](#-structure-des-projets)
+- [Technologies](#-technologies)
+- [Prérequis](#-prérequis)
+- [Installation](#-installation)
+- [Configuration de la base de données](#-configuration-de-la-base-de-données)
+- [Captures d'écran](#-captures-décran)
+- [Auteurs](#-auteurs)
+
+---
+
+## 🔍 Aperçu
+
+**SmartParking** est un système complet de gestion de parking développé en Java Swing. Il se compose de **deux applications indépendantes** :
+
+| Application | Rôle | Utilisateur |
+|---|---|---|
+| `SmartParkingProject` | Interface d'administration | Admin du parking |
+| `SmartParkingClient` | Borne libre-service | Client / Conducteur |
+
+Les deux applications partagent la même base de données **MySQL** via une couche DAO commune, et utilisent **FlatLaf 3.3** pour un rendu graphique moderne avec support du thème clair / sombre.
+
+---
+
+## ✨ Fonctionnalités
+
+### 🖥️ Interface Admin — `SmartParkingProject`
+
+#### 🔐 Authentification
+- Connexion sécurisée avec vérification MySQL
+- Compte par défaut : `admin` / `admin123`
+- Animation de chargement + session persistante
+
+#### 📊 Tableau de Bord
+- **6 KPIs** en temps réel : Places libres, Occupées, Revenus du jour, Passages, Alertes, Abonnés actifs
+- **Graphique** revenus des 7 derniers jours
+- Navigation rapide vers tous les modules
+- Horloge temps réel + date
+
+#### 👥 Gestion des Abonnements
+- Liste des abonnés avec matricule, nom, formule, statut, date d'expiration
+- **4 formules** : 1 mois (150 DH) · 2 mois (280 DH) · 3 mois (400 DH) · 1 an (1500 DH)
+- Carte membre visuelle personnalisée
+- Impression de reçu · Ajout · Suppression
+
+#### 📋 Historique des Paiements
+- Tous les passages enregistrés avec durée, montant, date de sortie
+- Total chiffre d'affaires affiché
+- Export **CSV** et **PDF**
+
+#### 💰 Tableau de Bord Revenus
+- 4 onglets : Vue Générale · Détail Période · Par Véhicule · Comparaison
+- Comparaison semaine / mois précédents
+- Indicateurs : véhicules/jour, revenu moyen/véhicule, meilleur jour
+
+#### ⚠️ Incidents & État des Places
+- Signalement d'incidents avec type et description
+- État temps réel de chaque place (Libre / Occupée / Électrique)
+- Historique des incidents résolus
+
+#### 🏷️ Tarification Spéciale
+- Règles dynamiques : **Nuit ×0.5** · **Weekend ×1.2** · **Camion ×2.0** · **Promo ×?**
+- **Simulateur de prix** intégré (type véhicule, durée, jour, heure)
+- Activation / désactivation de chaque règle
+
+#### 🗺️ Carte Temps Réel
+- Plan visuel du parking avec toutes les places
+- Code couleur : 🟢 Libre · 🔴 Occupée · 🔵 Handicap · 🟣 Électrique
+- Affichage matricule + type véhicule sur places occupées
+
+#### 🔔 Notifications & Rapports
+- Alertes des abonnements expirant dans 7 / 15 / 30 jours
+- **Rapport journalier PDF** : activité, revenus, taux d'occupation
+- Bouton "Notifier tous" (1 clic)
+
+---
+
+### 🚗 Borne Client — `SmartParkingClient`
+
+| Écran | Description |
+|---|---|
+| **Accueil** | Menu 5 actions : Entrée/Sortie · Payer · Places disponibles · Mon Abonnement · SOS |
+| **Saisie Plaque** | Clavier virtuel AZERTY intégré, validation plaque |
+| **Plan du Parking** | Carte temps réel avec places libres/occupées, bouton Actualiser |
+| **Vérification Abonnement** | Consultation statut par plaque immatriculée |
+| **Assistance SOS** | Bouton d'urgence — notifie un agent immédiatement |
+
+> Navigation par **CardLayout** — toutes les vues sont des `JPanel` sans rechargement de fenêtre.
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────┐     ┌─────────────────────────────┐
+│   SmartParkingProject       │     │   SmartParkingClient        │
+│   (Admin - Bureau)          │     │   (Borne - Libre-Service)   │
+│                             │     │                             │
+│  View  ← MVC →  Controller  │     │  View  ← MVC →  Controller  │
+│                             │     │                             │
+└──────────────┬──────────────┘     └──────────────┬──────────────┘
+               │                                   │
+               └──────────────┬────────────────────┘
+                              ↓
+               ┌──────────────────────────┐
+               │      ParkingDAO.java     │  ← Pattern DAO
+               │      Database.java       │  ← Connexion JDBC
+               └──────────────┬───────────┘
+                              ↓
+               ┌──────────────────────────┐
+               │        MySQL 8+          │
+               │  voitures · abonnements  │
+               │  tarifs · places         │
+               │  incidents · historique  │
+               └──────────────────────────┘
+```
+
+**Patterns utilisés :**
+- **MVC** — séparation View / Controller / Model
+- **DAO** (Data Access Object) — accès centralisé à la base de données
+- **Observer** — système de notifications
+- **Strategy** — calcul du prix selon le type de véhicule et les règles tarifaires
+- **Singleton** — connexion base de données unique
+
+---
+
+## 📁 Structure des Projets
+
+### SmartParkingProject (Admin)
+
+```
+SmartParkingProject/
+└── src/
+    ├── database/
+    │   ├── Database.java          # Connexion MySQL (Singleton)
+    │   ├── ParkingDAO.java        # Toutes les requêtes CRUD
+    │   └── TicketService.java     # Génération & archivage tickets
+    ├── model/
+    │   ├── Voiture.java           # Entité véhicule
+    │   ├── TypeVehicule.java      # Enum : VOITURE / MOTO / CAMION
+    │   └── CalculateurPrix.java   # Calcul tarifaire
+    ├── view/admin/
+    │   ├── AdminDashboard.java    # Tableau de bord principal
+    │   ├── LoginFrame.java        # Écran de connexion
+    │   ├── AbonnementsFrame.java  # Gestion abonnés
+    │   ├── HistoriqueFrame.java   # Historique paiements
+    │   ├── RevenusFrame.java      # Analyse revenus
+    │   ├── IncidentsFrame.java    # Incidents & places
+    │   ├── TarifsFrame.java       # Tarification spéciale
+    │   ├── NotificationsFrame.java# Alertes & rapports PDF
+    │   └── ParkingMapPanel.java   # Carte temps réel
+    └── util/
+        ├── GlassTheme.java        # Thème glass personnalisé
+        ├── ThemeManager.java      # Bascule clair ↔ sombre
+        ├── NotificationManager.java # Alertes UI
+        ├── AdminUI.java           # Composants UI réutilisables
+        └── ExportService.java     # Export CSV & PDF
+```
+
+### SmartParkingClient (Borne)
+
+```
+SmartParkingClient/
+└── src/
+    ├── database/
+    │   ├── Database.java          # Connexion MySQL
+    │   └── ParkingDAO.java        # Accès données borne
+    ├── model/
+    │   ├── Voiture.java
+    │   ├── TypeVehicule.java
+    │   └── CalculateurPrix.java   # Durée × tarif
+    ├── view/client/
+    │   └── BorneClient.java       # Interface borne complète (CardLayout)
+    └── util/
+        ├── NotificationManager.java
+        └── ThemeManager.java
+```
+
+---
+
+## 🛠️ Technologies
+
+| Technologie | Version | Usage |
+|---|---|---|
+| **Java** | 17+ | Langage principal — POO, lambdas, JDBC |
+| **Java Swing** | JDK bundled | Interface graphique — JFrame, JPanel, JTable |
+| **FlatLaf** | 3.3 | Look & Feel moderne, thème clair/sombre |
+| **MySQL** | 8.0+ | Base de données relationnelle |
+| **mysql-connector-j** | 9.5 | Pilote JDBC officiel MySQL → Java |
+| **IntelliJ IDEA** | 2024+ | IDE de développement |
+| **Git / GitHub** | — | Versioning et collaboration |
+
+---
+
+## 📦 Prérequis
+
+- **Java JDK 17** ou supérieur
+- **MySQL Server 8.0** ou supérieur
+- **IntelliJ IDEA** (recommandé) ou tout autre IDE Java
+- Bibliothèques JAR (incluses dans `/lib`) :
+  - `flatlaf-3.3.jar`
+  - `mysql-connector-j-9.5.0.jar`
+
+---
+
+## 🚀 Installation
+
+### 1. Cloner le dépôt
+
+```bash
+git clone https://github.com/hibalafkih/SmartParkingProject.git
+cd SmartParkingProject
+```
+
+### 2. Importer dans IntelliJ IDEA
+
+```
+File → Open → Sélectionner le dossier SmartParkingProject
+File → Project Structure → Libraries → Ajouter les JARs de /lib
+```
+
+### 3. Configurer la base de données
+
+Voir la section [Configuration de la base de données](#-configuration-de-la-base-de-données).
+
+### 4. Lancer l'application Admin
+
+```
+Run → SmartParkingProject/src/Main.java
+```
+
+### 5. Lancer la Borne Client (optionnel)
+
+```bash
+git clone https://github.com/hibalafkih/SmartParkingClient.git
+```
+
+```
+Run → SmartParkingClient/src/Main.java
+```
+
+---
+
+## 🗄️ Configuration de la Base de Données
+
+### Étape 1 — Créer la base
+
+```sql
+CREATE DATABASE smartparking;
+USE smartparking;
+```
+
+### Étape 2 — Créer les tables
+
+```sql
+-- Table des véhicules (entrées/sorties)
+CREATE TABLE voitures (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    plaque        VARCHAR(20) NOT NULL,
+    type_vehicule ENUM('VOITURE','MOTO','CAMION') DEFAULT 'VOITURE',
+    date_entree   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_sortie   DATETIME,
+    place_id      INT
+);
+
+-- Table des abonnements
+CREATE TABLE abonnements (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    nom         VARCHAR(50) NOT NULL,
+    prenom      VARCHAR(50),
+    plaque      VARCHAR(20) NOT NULL,
+    date_debut  DATE NOT NULL,
+    date_fin    DATE NOT NULL,
+    formule     VARCHAR(20),
+    montant     DECIMAL(10,2),
+    mode_paiement VARCHAR(20) DEFAULT 'ESPECES',
+    statut      ENUM('ACTIF','EXPIRE','SUSPENDU') DEFAULT 'ACTIF'
+);
+
+-- Table des tarifs de base
+CREATE TABLE tarifs (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    type_vehicule ENUM('VOITURE','MOTO','CAMION'),
+    prix_heure    DECIMAL(10,2) NOT NULL,
+    prix_jour     DECIMAL(10,2)
+);
+
+-- Tarifs par défaut
+INSERT INTO tarifs (type_vehicule, prix_heure, prix_jour) VALUES
+('VOITURE', 5.00, 50.00),
+('MOTO',    3.00, 30.00),
+('CAMION',  10.00, 100.00);
+```
+
+### Étape 3 — Configurer la connexion
+
+Modifier le fichier `src/database/Database.java` :
+
+```java
+private static final String URL      = "jdbc:mysql://localhost:3306/smartparking";
+private static final String USER     = "root";       // ← votre utilisateur MySQL
+private static final String PASSWORD = "votre_mdp";  // ← votre mot de passe
+```
+
+---
+
+## 📸 Captures d'écran
+
+### Interface Admin
+
+| Login | Tableau de Bord |
+|---|---|
+| ![Login](screenshots/login.png) | ![Dashboard](screenshots/dashboard.png) |
+
+| Gestion Abonnements | Tarification Spéciale |
+|---|---|
+| ![Abonnements](screenshots/abonnements.png) | ![Tarifs](screenshots/tarifs.png) |
+
+| Carte Temps Réel | Incidents & Places |
+|---|---|
+| ![Carte](screenshots/carte.png) | ![Incidents](screenshots/incidents.png) |
+
+### Interface Client (Borne)
+
+| Accueil | Saisie Plaque | Assistance SOS |
+|---|---|---|
+| ![Accueil](screenshots/borne_accueil.png) | ![Plaque](screenshots/borne_plaque.png) | ![SOS](screenshots/borne_sos.png) |
+
+---
+
+## 👤 Auteurs
+
+**hibalafkih** — Développeur principal
+
+- GitHub : [@hibalafkih](https://github.com/hibalafkih)
+- Projet Admin : [SmartParkingProject](https://github.com/hibalafkih/SmartParkingProject)
+- Projet Client : [SmartParkingClient](https://github.com/hibalafkih/SmartParkingClient)
+
+---
+
+## 📄 Licence
+
+Ce projet est sous licence **MIT** — voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+<div align="center">
+  <strong>SmartParking</strong> · Java 17 + MySQL 8 + FlatLaf 3.3 · Mars 2026
+</div>

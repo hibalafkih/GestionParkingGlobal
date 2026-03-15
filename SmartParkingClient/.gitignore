@@ -1,0 +1,30 @@
+### IntelliJ IDEA ###
+# Fichiers compilés
+*.class
+out/
+build/
+
+### Eclipse ###
+.classpath
+.project
+.settings
+bin/
+
+# Fichiers de l'IDE (IntelliJ)
+.idea/
+*.iml
+*.iws
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS & Windows ###
+.DS_Store
+Thumbs.db
